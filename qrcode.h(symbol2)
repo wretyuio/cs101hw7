@@ -1,0 +1,56 @@
+#include <vector>
+#include <string>
+
+class qrcode
+{
+public:
+    // Constructor: inputs the taken picture from the mars.
+    // resets the private members to appropriate values !
+    qrcode(PicturePtr pic);
+    int min(int min, int point);
+    int max(int max, int point);
+
+    int getXMin();
+    int getXMax();
+    int getYMin();
+    int getYMax();
+    int getType();
+    //
+    int getAmountRed();
+    int getAmountOrange();
+    int getAmountYellow();
+    int getAmountLightGreen();
+    int getAmountDarkGreen();
+    int getAmountBlue();
+    int getAmountPurple();
+
+    bool Detect(int** visitedMap); //detects qr code, saves information in private members of class
+private:
+    void DetectHelper(int x, int y, int** visitedMap);
+    bool isBlack(int x, int y);
+    bool findFirst(int x, int y);
+    bool findNext(int x, int y);
+
+    PicturePtr mainPic;
+    int picWidth;
+    int picHeight;
+    int xmin;
+    int **visitedMap;
+    int ymin;
+    int xmax;
+    int ymax;
+    int type;
+      // 1: heart      yellow,  red background
+    	// 2: circle     purple,  green background
+    	// 3: star       orange,  blue background
+    	// 4: triangle   blue,    yellow background
+    	// 5: pentagon   red,     purple background
+    	// 6: cross      green,   orange background
+    int amountRed;
+    int amountOrange;
+    int amountYellow;
+    int amountLightGreen;
+    int amountDarkGreen;
+    int amountBlue;
+    int amountPurple;
+};
