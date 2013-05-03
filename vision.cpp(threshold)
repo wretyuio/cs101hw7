@@ -1,0 +1,166 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <Myro.h>
+#include <Picture.h>
+#include <Graphics.h>
+#include "qrcode.h"
+#include "song.h"
+#include <sstream>
+using namespace std;
+
+void boxHighlight(PicturePtr pic, vector<qrcode> qrCodes)
+{
+  cout << qrCodes.size() << endl;
+
+  for(int i=0; i < qrCodes.size(); i++) //for each alien
+  {
+    cout << "qr code " << i << endl;
+    cout << "xmin " << qrCodes[i].getXMin() << endl;
+    cout << "xmax " << qrCodes[i].getXMax() << endl;
+    cout << "ymin " << qrCodes[i].getYMin() << endl;
+    cout << "ymax " << qrCodes[i].getYMax() << endl;
+    cout << "type " << qrCodes[i].getType();
+    if (qrCodes[i].getType()==1) //heart
+      cout << " heart" << endl;
+    else if (qrCodes[i].getType()==2) //circle
+    	cout << " circle" << endl;
+    else if (qrCodes[i].getType()==3) //star
+    	cout <<" star" << endl;
+    else if (qrCodes[i].getType()==4) //triangle
+    	cout << " triangle" << endl;
+    else if (qrCodes[i].getType()==5) //pentagon
+    	cout << " pentagon" << endl;
+    else if (qrCodes[i].getType()==6) //cross
+    	cout << " cross" << endl;
+    cout << endl;
+
+    for(int x=qrCodes[i].getXMin(); x<qrCodes[i].getXMax(); x++)
+    {
+      for(int d=qrCodes[i].getYMin()-6; d<qrCodes[i].getYMin(); d++)
+      {
+        if(d>-1) setPixelColor(pic, x, d, 247, 37, 174);
+      }
+      for(int s=qrCodes[i].getYMax(); s<qrCodes[i].getYMax()+6; s++)
+      {
+        if(s<getHeight(pic)) setPixelColor(pic, x, s, 247, 37, 174);
+      }
+    }
+
+    for(int y=qrCodes[i].getYMin(); y<qrCodes[i].getYMax(); y++)
+    {
+      for(int a=qrCodes[i].getXMin()-6; a<qrCodes[i].getXMin(); a++)
+      {
+        if(a>-1) setPixelColor(pic, a, y, 247, 37, 174);
+      }
+      for(int b=qrCodes[i].getXMax(); b<qrCodes[i].getXMax()+6; b++)
+      {
+        if(b<getWidth(pic)) setPixelColor(pic, b, y, 247, 37, 174);
+      }
+    }
+  }
+}
+
+void orderQR(vector <qrcode> qrCodes)
+{
+	for (int m=0; m< qrCodes.size(); m++)
+	{
+		for (int n=0; n<(qrCodes.size()-1); n++ )
+		{
+			if ( qrCodes[n].getArea() > qrCodes[n+1].getArea() ) /sorting by area
+			{
+				int temp=stuff[n];
+				stuff[n]=stuff[n+1];
+				stuff[n+1]=temp;
+			}
+			else if ( qrCodes[n].getArea() = qrCodes[n+1].getArea() )//sorting by location if areas are equal
+			{
+				if ( qrCodes[n].getXMin() > qrCodes[n+1].getXMin() ) //qr code that has a smaller x goes first
+				{
+					int temp=stuff[n];
+					stuff[n]=stuff[n+1];
+					stuff[n+1]=temp;
+				}
+				else if ( qrCodes[n].getXMin() = qrCodes[n+1].getXMin() ) //if have same xmin
+				{
+					if (qrCodes[n].getYMin() > qrCodes[n=1].getYMin()) //qrcode that has smaller y goes first
+					{
+						int temp=stuff[n];
+						stuff[n]=stuff[n+1];
+						stuff[n+1]=temp;
+					}
+				}
+			}
+		}
+	}
+}
+
+int main()
+{
+	int repeat=0;
+	while (repeat!=2)
+	{
+		repeat=0;
+		cout << "Please press enter to begin" << endl;
+		cin.ignore(1000,'\n');
+		string playlistName="";
+			cout << "Please enter the playlist name" << endl;
+			getline(cin, playlistName);
+		PicturePtr playlist = loadPicture( playlistName.c_str() );
+		// connect("/dev/ttyS0");
+		// PicturePtr playlist = robot.takePicture("jpeg");
+		cout << "Picture is loaded" << endl;
+
+		int h = getHeight(playlist);
+		int w = getWidth(playlist);
+		int ** visitedMap = new int*[h];
+		for (int i=0; i<h; i++)
+		{
+			visitedMap[i] = new int[w];
+			for (int j=0; j<w; j++)
+			{
+				visitedMap[i][j] = 0;
+			}
+		}
+		cout << "Map made" << endl;
+
+		// songStuff *thisSong = new songStuff();
+		// int *number = new int;
+		vector <qrcode> qrCodes;
+		cout << "qr code made" << endl;
+		bool found = true;
+		while (found)
+		{
+			cout << "inside while loop" << endl;
+			qrcode a(playlist);
+			found = a.Detect(visitedMap);
+
+			if (found && (a.getArea()>=250 ) )
+			{
+				cout << "found a qr code of type " << a.getType() << endl;
+				qrCodes.push_back(a);
+			}
+		}
+
+		boxHighlight(playlist,qrCodes);
+		show(playlist);
+		stringstream ss; //string stream allows me to cycle through different names of files, converting the int variable y in my for loop into a string
+			ss << 8;
+			string textFileName= "playlistHi_" + ss.str() + ".jpg";
+		savePicture(playlist, textFileName.c_str() );
+
+		orderQr(qrCodes);
+
+		for (int i=0; i<h; i++)
+			delete [] visitedMap[i];
+		delete [] visitedMap;
+
+		cout << "Do you want to play another playlist?  Enter the number (+press enter) of your choice." << endl;
+		cout << "	1. Yes" << endl;
+		cout << "	2. No" << endl;
+		cin >> repeat;
+	}
+
+	cout << "Thanks for using my program, and have a good day!" << endl;
+	return 0;
+}
