@@ -1,0 +1,110 @@
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include "song.h"
+#include <Myro.h>
+#include <math.h>
+#include <stdio.h>
+#include <cstdlib>
+#include <sstream>
+#include <Picture.h>
+#include <Graphics.h>
+using namespace std;
+
+song::song()
+{
+  string song1 = "260 2; 520 1; 440 1; 392 1; 330 1 392 3 294 3";
+	string song2 = "260 2 520 1 440 1 392 1 330 1 392 5";
+	string song3 = "415 1 440 1 415 1 440 1 330 1 349 1 392 1 440 2 349 1 ";
+	string song4 = "294 3 440 2 440 1 440 1 494 1 520 1 587 1 494 1";
+	string song5 = "440 1 392 1 330 1 294 1 260 2 520 1 440 1 ";
+	string song6 = "392 1 330 1 392 3 294 2 294 1 260 2 294 1 ";
+	int type=0;
+}
+
+song::~song()
+{
+}
+
+void song::setType(int number)
+{
+	type = number;
+}
+
+void song::playSong()
+{
+	string notes;
+	if (type==1)
+	{
+		notes=song1;
+		cout << "song 1: " << notes << endl;
+	}
+	else if (type==2)
+	{
+		notes=song2;
+		cout << "song 2: " << notes << endl;
+	}
+	else if (type==3)
+	{
+		notes=song3;
+		cout << "song 3: " << notes << endl;
+	}
+	else if (type==4)
+	{
+		notes=song4;
+		cout << "song 4: " << notes << endl;
+	}
+	else if (type==5)
+	{
+		notes=song5;
+		cout << "song 5: " << notes << endl;
+	}
+	else if (type==6)
+	{
+		notes=song5;
+		cout << "song 6: " << notes << endl;
+	}
+
+	// double freqMod = 2;
+	// double durMod = .2;
+
+	// char * cstr = new char[notes.length()+1];
+	// strcpy(cstr, notes.c_str());
+	// char * p = strtok(cstr, " ;\t"); // preparation for tokenizing complete
+	// int base_freqs[] = {440, 494, 260, 294, 330, 349, 392}; // freqs: A B C D E F G (octave 4)
+	// int freq = 0, octave = 0, dur = 1;
+	// while(p != 0) {
+	// 	string note = p;
+	// 	char letter = toupper(note.at(0));
+	// 	int letterInd = letter - 'A';
+	// 	freq = base_freqs[letterInd]; // get base frequency
+	// 	if(strlen(p) == 2) { // contains sharp or flat!
+	// 		if(note.at(1) == '#') { // it's a sharp
+	// 			switch(letter) {
+	// 				case 'E': freq = base_freqs[5]; break; // E# = F
+	// 				case 'B': freq = base_freqs[2]; break; // B# = C
+	// 				default: freq = (base_freqs[letterInd] + base_freqs[(letterInd + 1) % 7]) / 2.0;
+	// 			}
+	// 		}
+	// 		else if(note.at(1) == 'b') { // it's a flaT
+	// 			switch(letter) {
+	// 				case 'F': freq = base_freqs[4]; break; // Fb = E
+	// 				case 'C': freq = base_freqs[1]; break; // Cb = B
+	// 				default: freq = (base_freqs[letterInd] + base_freqs[(letterInd + 6) % 7]) / 2.0;
+	// 			}
+	// 		}
+	// 	}
+	// 	p = strtok(NULL, " ;\t");
+
+	// 	octave = atoi(p);
+	// 	freq *= pow(2, octave - 4);
+	// 	p = strtok(NULL, " ;\t");
+
+	// 	dur = atoi(p);
+	// 	p = strtok(NULL, " ;\t");
+
+	// 	robot.beep(dur * durMod, freq * freqMod);
+	// }
+	// delete[] cstr;
+}
