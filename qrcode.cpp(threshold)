@@ -1,0 +1,305 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <Myro.h>
+#include <Picture.h>
+#include <Graphics.h>
+#include "qrcode.h"
+using namespace std;
+
+qrcode::qrcode(PicturePtr pic)
+{
+  xmin = 999999;
+	xmax = 0;
+	ymin = 999999;
+	ymax = 0;
+	type = 0;
+	//
+	amountRed=0;
+    amountOrange=0;
+    amountYellow=0;
+    amountDarkGreen=0;
+    amountLightGreen=0;
+    amountBlue=0;
+    amountPurple=0;
+
+	mainPic = pic;
+	picWidth = pic->getWidth();
+	picHeight = pic->getHeight();
+}
+
+int qrcode::min(int min, int point)
+{
+	if ( point<min ) //if the point is smaller than the original min
+		return point; //make the point to be the new min
+	else
+		return min; //keep the original min
+}
+
+int qrcode::max(int max, int point)
+{
+	if ( point>max ) //if the point is bigger than the original max
+		return point; //make the point to be the new max
+	else
+		return max; //keep the original max
+}
+
+int qrcode::getXMin()
+{
+	return xmin;
+}
+int qrcode::getXMax()
+{
+	return xmax;
+}
+int qrcode::getYMin()
+{
+	return ymin;
+}
+int qrcode::getYMax()
+{
+	return ymax;
+}
+int qrcode::getType()
+{
+	return type;
+}
+int qrcode::getAmountRed()
+{
+	return amountRed;
+}
+int qrcode::getAmountOrange()
+{
+	return amountOrange;
+}
+int qrcode::getAmountYellow()
+{
+	return amountYellow;
+}
+int qrcode::getAmountLightGreen()
+{
+	return amountLightGreen;
+}
+int qrcode::getAmountDarkGreen()
+{
+	return amountDarkGreen;
+}
+int qrcode::getAmountBlue()
+{
+	return amountBlue;
+}
+int qrcode::getAmountPurple()
+{
+	return amountPurple;
+}
+int qrcode::getHeight()
+{
+	int qrHeight = ymax-ymin;
+	return qrHeight;
+}
+int qrcode::getWidth()
+{
+	int qrWidth = xmax-xmin;
+	return qrWidth;
+}
+int qrcode::getArea()
+{
+	int area = getWidth()*getHeight();
+	return area;
+}
+
+void qrcode::DetectHelper(int x, int y, int** visitedMap)
+{
+	if ( findNext(x,y) && visitedMap[y][x]==0 )
+	{
+		//cout << "Detect Helper x: " << x << ", y: " << y << endl;
+		xmin = min(x, xmin);
+		xmax = max(x, xmax);
+		ymin = min(y, ymin);
+		ymax = max(y, ymax);
+		visitedMap[y][x] = 1;
+
+		if(x<picWidth-1) 
+			DetectHelper(x+1, y+0, visitedMap);
+		if(x>0) 
+			DetectHelper(x-1, y+0, visitedMap);
+	
+		if(y<picHeight-1) 
+			DetectHelper(x+0, y+1, visitedMap);
+		if(y>0) 
+			DetectHelper(x+0, y-1, visitedMap);
+
+		if(x<picWidth-1 && y>0) 
+			DetectHelper(x+1, y-1, visitedMap);
+		if(x>0 && y<picHeight-1) 
+			DetectHelper(x-1, y+1, visitedMap);
+	
+		if(x>0 && y>0) 
+			DetectHelper(x-1, y-1, visitedMap);
+		if(x<picWidth-1 && y<picHeight-1) 
+			DetectHelper(x+1, y+1, visitedMap);
+	}
+}
+
+bool qrcode::isBlack(int x, int y) //used this when looking for borders, but since this method didn't work when multiple qr outlines were overlapped, I ended up not using them
+{
+	Pixel black={0,0,0};
+	Pixel temp = getPixel(mainPic, x, y);
+	int dist = sqrt( pow( (black.R-temp.R), 2) + pow( (black.G-temp.G), 2) + pow( (black.B-temp.B),2) );
+	int threshold=40;
+
+	if (dist < threshold) 
+		return true;
+	else
+		return false;
+}
+
+bool qrcode::Detect(int** visitedMap)
+{
+	bool found=false;
+	for(int y=0; y<picHeight && !found; y++)
+	{
+		for(int x=0; x<picWidth && !found; x++)
+		{
+			if( findFirst(x,y) && visitedMap[y][x]==0)
+			{
+				cout << "Detect x: " << x << ", y: " << y << endl;
+				found=true;
+				DetectHelper(x,y,visitedMap);
+			}
+		}
+	}
+	return found;
+}
+
+bool qrcode::findFirst(int x, int y) //finds first point of QR code, searches for background only
+{
+	Pixel red={214,43,8}; //R:207>221; G:39>48; B:1>16
+	Pixel orange={236,183,109}; //R:231>240; G:180>185; B:100>118
+	Pixel yellow={254,251,55}; //R:254>255; G:251>252; B:55>56
+	Pixel darkGreen={137,249,60};  //R:137>138; G:248>250; B:59>61
+	Pixel lightGreen={107,182,64};  //R:107; G:182; B:64
+	Pixel green={122,215,62};
+	Pixel blue={32,54,251};  //R:31>34; G:53>55; B:249>253
+	Pixel purple={150,90,203}; //R:147>152; G:87>91; B:200>207
+
+	Pixel temp = getPixel(mainPic, x, y);
+	int d1 = sqrt( pow( (red.R-temp.R), 2) + pow( (red.G-temp.G), 2) + pow( (red.B-temp.B),2) );
+	int d2 = sqrt( pow( (orange.R-temp.R), 2) + pow( (orange.G-temp.G), 2) + pow( (orange.B-temp.B),2) );
+	int d3 = sqrt( pow( (yellow.R-temp.R), 2) + pow( (yellow.G-temp.G), 2) + pow( (yellow.B-temp.B),2) );
+	int d4 = sqrt( pow( (darkGreen.R-temp.R), 2) + pow( (darkGreen.G-temp.G), 2) + pow( (darkGreen.B-temp.B),2) );
+	int d5 = sqrt( pow( (lightGreen.R-temp.R), 2) + pow( (lightGreen.G-temp.G), 2) + pow( (lightGreen.B-temp.B),2) );
+	int dg = sqrt( pow( (green.R-temp.R), 2) + pow( (green.G-temp.G), 2) + pow( (green.B-temp.B),2) );
+	int d6 = sqrt( pow( (blue.R-temp.R), 2) + pow( (blue.G-temp.G), 2) + pow( (blue.B-temp.B),2) );
+	int d7 = sqrt( pow( (purple.R-temp.R), 2) + pow( (purple.G-temp.G), 2) + pow( (purple.B-temp.B),2) );
+	
+	int threshold=20;
+	if (d1 < threshold) //red
+	{
+		type = 1;
+		return true;
+	}
+	else if (d2 < threshold) //orange
+	{
+		type = 6;
+		return true;
+	}
+	else if (d3 < threshold) //yellow
+	{
+		type = 4;
+		return true;
+	}
+	// else if (d4 < threshold) //dark green
+	// {
+	// 	type = 6;
+	// 	return true;
+	// }
+	// else if (d5 < threshold) //light green
+	// {
+	// 	type = 2;
+	// 	return true;
+	// }
+	else if (d5 < (threshold+15)) //light green
+	{
+		type = 2;
+		return true;
+	}
+	else if (d6 < threshold) //blue
+	{
+		type = 3;
+		return true;
+	}
+	else if (d7 < (threshold+15) ) //purple
+	{
+		type = 5;
+		return true;
+	}
+	else
+		return false;
+}
+
+bool qrcode::findNext(int x, int y) //finds the other points of the QR code
+{
+	Pixel red={214,43,8}; //R:207>221; G:39>48; B:1>16
+	Pixel orange={236,183,109}; //R:231>240; G:180>185; B:100>118
+	Pixel yellow={254,251,55}; //R:254>255; G:251>252; B:55>56
+	Pixel darkGreen={137,249,60};  //R:137>138; G:248>250; B:59>61
+	Pixel lightGreen={107,182,64};  //R:107; G:182; B:64
+	Pixel green={122,215,62};
+	Pixel blue={32,54,251};  //R:31>34; G:53>55; B:249>253
+	Pixel purple={150,90,203}; //R:147>152; G:87>91; B:200>207
+
+	Pixel temp = getPixel(mainPic, x, y);
+	int d1 = sqrt( pow( (red.R-temp.R), 2) + pow( (red.G-temp.G), 2) + pow( (red.B-temp.B),2) );
+	int d2 = sqrt( pow( (orange.R-temp.R), 2) + pow( (orange.G-temp.G), 2) + pow( (orange.B-temp.B),2) );
+	int d3 = sqrt( pow( (yellow.R-temp.R), 2) + pow( (yellow.G-temp.G), 2) + pow( (yellow.B-temp.B),2) );
+	int d4 = sqrt( pow( (darkGreen.R-temp.R), 2) + pow( (darkGreen.G-temp.G), 2) + pow( (darkGreen.B-temp.B),2) );
+	int d5 = sqrt( pow( (lightGreen.R-temp.R), 2) + pow( (lightGreen.G-temp.G), 2) + pow( (lightGreen.B-temp.B),2) );
+	int dg = sqrt( pow( (green.R-temp.R), 2) + pow( (green.G-temp.G), 2) + pow( (green.B-temp.B),2) );
+	int d6 = sqrt( pow( (blue.R-temp.R), 2) + pow( (blue.G-temp.G), 2) + pow( (blue.B-temp.B),2) );
+	int d7 = sqrt( pow( (purple.R-temp.R), 2) + pow( (purple.G-temp.G), 2) + pow( (purple.B-temp.B),2) );
+	
+	int threshold=150;
+	if ( type==1 ) //red + yelow = heart
+	{
+		if ((d1<threshold) || (d3<threshold))
+			return true;
+		else
+			return false;
+	}
+	if ( type==2 ) //light green + purple = circle
+	{
+		if ((dg<(threshold+50)) || (d7<(threshold+50)) )
+			return true;
+		else
+			return false;
+	}
+	if ( type==3 ) //orange + blue = star
+	{
+		if ((d2<threshold) || (d6<threshold))
+			return true;
+		else
+			return false;
+	}
+	if ( type==4 ) //blue + yellow = triangle
+	{
+		if ((d6<threshold) || (d3<threshold))
+			return true;
+		else
+			return false;
+	}
+	if ( type==5 ) //purple + red = pentagon
+	{
+		if ((d7<threshold) || (d1<threshold))
+			return true;
+		else
+			return false;
+	}
+	if ( type==6 ) //orange + dgreen = cross
+	{
+		if ((d2<threshold) || (dg<threshold))
+			return true;
+		else
+			return false;
+	}
+}
