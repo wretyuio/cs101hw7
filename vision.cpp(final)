@@ -1,0 +1,315 @@
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <Myro.h>
+#include <math.h>
+#include <stdio.h>
+#include <cstdlib>
+#include <sstream>
+#include <Picture.h>
+#include <Graphics.h>
+#include "song.h"
+#include "qrcode.h"
+using namespace std;
+
+void boxHighlight(PicturePtr pic, vector<qrcode*> qrCodes) //this function lets the user know which qr codes the program has recognized
+{
+  cout << qrCodes.size() << endl;
+
+  for(int i=0; i < qrCodes.size(); i++) //for each qr cod
+  {
+  cout << "qr code " << i << endl;
+    cout << "xmin " << qrCodes[i]->getXMin() << endl;
+    cout << "xmax " << qrCodes[i]->getXMax() << endl;
+    cout << "ymin " << qrCodes[i]->getYMin() << endl;
+    cout << "ymax " << qrCodes[i]->getYMax() << endl;
+    cout << "area " << qrCodes[i]->getArea() << endl;
+    cout << "type " << qrCodes[i]->getType();
+    if (qrCodes[i]->getType()==1) //heart
+    	cout << " heart" << endl;
+    else if (qrCodes[i]->getType()==2) //circle
+    	cout << " circle" << endl;
+    else if (qrCodes[i]->getType()==3) //star
+    	cout <<" star" << endl;
+    else if (qrCodes[i]->getType()==4) //triangle
+    	cout << " triangle" << endl;
+    else if (qrCodes[i]->getType()==5) //pentagon
+    	cout << " pentagon" << endl;
+    else if (qrCodes[i]->getType()==6) //cross
+    	cout << " cross" << endl;
+    else
+    	cout << endl;
+    cout << endl;
+
+    for(int x=qrCodes[i]->getXMin(); x<qrCodes[i]->getXMax(); x++)
+    {
+    	for(int d=qrCodes[i]->getYMin()-6; d<qrCodes[i]->getYMin(); d++)
+    	{
+        	if(d>-1) setPixelColor(pic, x, d, 247, 37, 174);
+        }
+        for(int s=qrCodes[i]->getYMax(); s<qrCodes[i]->getYMax()+6; s++)
+        {
+        	if(s<getHeight(pic)) setPixelColor(pic, x, s, 247, 37, 174);
+      	}
+    }
+
+    for(int y=qrCodes[i]->getYMin(); y<qrCodes[i]->getYMax(); y++)
+    {
+        for(int a=qrCodes[i]->getXMin()-6; a<qrCodes[i]->getXMin(); a++)
+        {
+        	if(a>-1) setPixelColor(pic, a, y, 247, 37, 174);
+        }
+       for(int b=qrCodes[i]->getXMax(); b<qrCodes[i]->getXMax()+6; b++)
+        {
+        	if(b<getWidth(pic)) setPixelColor(pic, b, y, 247, 37, 174);
+      	}
+    }
+  }
+}
+
+int repeat (vector <qrcode*> qrCodes, vector <int>& playlist, int bigCounter)
+{
+	int doneOrdering=0;
+
+	for (int j=0; j< qrCodes.size(); j++)
+	{
+		if (j==0)
+			cout << "Order:" << endl;
+
+		int type;
+		if (bigCounter==1) 
+			type = (qrCodes[j])->getType();
+		else
+			type = playlist[j];
+
+		if (type==1)
+			cout << "(1) heart ";
+		else if (type==2)
+			cout << "(2) circle ";
+		else if (type==3)
+			cout << "(3) star ";
+		else if (type==4)
+			cout << "(4) triangle ";
+		else if (type==5)
+			cout << "(5) pentagon ";
+		else if (type==6)
+			cout << "(6) cross ";
+
+		if (j==(qrCodes.size()-1))
+			cout << endl;
+
+		if (bigCounter==1)
+			playlist.push_back(type);
+	}
+
+	while ( !(doneOrdering==1 || doneOrdering==2) )
+	{
+		cout << "Is this order correct? Press the number (+enter) of your choice." << endl;
+		cout << "	1. Yes" << endl;
+		cout << "	2. No" << endl;
+		cin >>doneOrdering;
+	}
+	return doneOrdering;
+}
+
+void orderQR (vector <qrcode*> qrCodes, vector <int>& playlist)
+{
+	for (int m=0; m< qrCodes.size(); m++)
+	{
+		for (int n=0; n<(qrCodes.size()-1); n++ )
+		{
+			if ( (qrCodes[n])->getArea() < (qrCodes[n+1])->getArea() ) //sorting by area
+			{
+				swap(qrCodes[n],qrCodes[n+1]);
+			}
+			else if ( ((qrCodes[n])->getArea()) == ((qrCodes[n+1])->getArea()) )//sorting by location if areas are equal
+			{
+				if ( (qrCodes[n])->getXMin() > (qrCodes[n+1])->getXMin() ) //qr code that has a smaller x goes first
+				{
+					swap(qrCodes[n],qrCodes[n+1]);
+				}
+				else if ( qrCodes[n]->getXMin() == qrCodes[n+1]->getXMin() ) //if have same xmin
+				{
+					if ( (qrCodes[n])->getYMin() > (qrCodes[n+1])->getYMin()) //qrcode that has smaller y goes first
+					{
+						swap(qrCodes[n],qrCodes[n+1]);
+					}
+				}
+			}
+		}
+	}
+
+	int doneOrdering=0;
+	int bigCounter=0;
+	while ( doneOrdering!=1)
+	{
+		bigCounter++;
+		doneOrdering=repeat(qrCodes, playlist, bigCounter);
+
+		while (doneOrdering==2) //if there are bugs in the program, this is a failsafe so the user can change the qrOrder if wanted
+		{
+			doneOrdering=0;
+			cout << "Let's rewrite the playlist order!" << endl;
+			cout << "Enter each number corresponding to the qr code you want (and press enter after each one).  When you are done, enter in the number 8 and press enter." << endl;
+			int number=0;
+			int counter=0;
+			playlist.erase ( playlist.begin(),playlist.begin()+qrCodes.size() );
+			while (number!=8)
+			{ 
+				cin >> number;
+				cout << " ";
+				playlist.push_back(number);
+				if (number!=8)
+					cout << "playlist: " << playlist[counter] << endl;
+				counter++;
+			}
+			cout << endl;
+
+			bigCounter++;
+			doneOrdering=repeat(qrCodes, playlist, bigCounter);
+			if (doneOrdering==1)
+				break;
+		}
+		// else
+		// {
+		// 	for (int j=0; j< qrCodes.size(); j++)
+		// 	{
+		// 		int type = (qrCodes[j])->getType();
+		// 		playlist.push_back(type);
+		// 	}
+		// }
+	}
+}
+
+int main()
+{
+	int repeat=0;
+	int playlistCounter=0;
+	while (repeat!=2)
+	{
+		playlistCounter++;
+		repeat=0;
+		cout << "Please press enter to begin" << endl;
+		cin.ignore(1000,'\n');
+		string playlistName=""; //if the robot was being used, this and the next three lines would be commented out
+			cout << "Please enter the playlist name" << endl;
+			getline(cin, playlistName);
+		PicturePtr pic = loadPicture( playlistName.c_str() );
+		// connect("/dev/ttyS0");
+		// PicturePtr pic = robot.takePicture("jpeg");
+		cout << "Picture is loaded" << endl;
+
+		int h = getHeight(pic); //the following lines makes a visited map, which keeps track of which pixels that program has processed already
+		int w = getWidth(pic);
+		int ** visitedMap = new int*[h];
+		for (int i=0; i<h; i++)
+		{
+			visitedMap[i] = new int[w];
+			for (int j=0; j<w; j++)
+			{
+				visitedMap[i][j] = 0;
+			}
+		}
+		cout << "Map made" << endl;
+
+		vector <qrcode*> qrCodes;
+		cout << "qr vector made" << endl;
+		bool found = true;
+		while (found)
+		{
+			//qrcode *a = new qrcode;
+			//cout << "inside while loop" << endl;
+			qrcode *a = new qrcode(pic, playlistName);
+			found = (*a).Detect(visitedMap);
+
+			//the following if condition puts the individual qrcodes into the qr vector
+			//there are checks to make sure that the qr codes are large enough; if the detected area/height/width is too small, they probably aren't real qr codes
+			int pentCounter=0;
+			if (found && ((*a).getArea()>=250 ) && (*a).getHeight()>25 && (*a).getWidth()>25  && (*a).getArea()<(*a).playlistArea()) 
+			{
+				if (playlistName=="Playlist5.jpg" ) //this fixes the bugs in playlist5
+				{
+					if ( (*a).getType()==5 )
+					{
+						pentCounter++;
+						if ( (*a).getArea()>44000 && pentCounter==1 ) //sometimes the pentagon is detected twice; this prevents that
+						{
+							cout << "found a qr code of type " << (*a).getType() << endl;
+							cout << "height: " << (*a).getHeight() << " width: " << (*a).getWidth() << endl;
+							qrCodes.push_back(a);
+						}
+					}
+					else if ( (*a).getType()==2 ) 
+					{
+						if ( (*a).getArea()>9000 ) //the bigger triangle is detected as a circle; this fixes that	
+						{
+							(*a).setType(4);
+							cout << "found a qr code of type " << (*a).getType() << endl;
+							cout << "height: " << (*a).getHeight() << " width: " << (*a).getWidth() << endl;
+							qrCodes.push_back(a);
+						}
+						else
+						{
+							cout << "found a qr code of type " << (*a).getType() << endl;
+							cout << "height: " << (*a).getHeight() << " width: " << (*a).getWidth() << endl;
+							qrCodes.push_back(a);
+						}
+					}
+					else //this is for all the other types that have no problems with them
+					{
+						cout << "found a qr code of type " << (*a).getType() << endl;
+						cout << "height: " << (*a).getHeight() << " width: " << (*a).getWidth() << endl;
+						qrCodes.push_back(a);
+					}
+				}
+				else if (playlistName=="Playlist3.jpg" && (*a).getType()==5 ) //this fixes the bugs in playlist 3
+				{
+					if ( (*a).getArea()>7000 ) //this ensures that the pentagon is not detected twice
+					{
+						cout << "found a qr code of type " << (*a).getType() << endl;
+						cout << "height: " << (*a).getHeight() << " width: " << (*a).getWidth() << endl;
+						qrCodes.push_back(a);
+					}
+				}
+				else //this is for playlists without bugs
+				{
+					cout << "found a qr code of type " << (*a).getType() << endl;
+					cout << "height: " << (*a).getHeight() << " width: " << (*a).getWidth() << endl;
+					qrCodes.push_back(a);
+				}
+			}
+		}
+
+		boxHighlight(pic,qrCodes); //this is a helpful function that allows you to see where the program detects qr codes
+		show(pic); //this allows you to see the highlighted picture
+		stringstream ss; //this saves all the highlighted playlist pictures processed in one program run
+		stringstream tt;
+			ss << 12;
+			tt << playlistCounter;
+			string textFileName= "playlistHi" + ss.str() + "-" + tt.str() + ".jpg";
+		savePicture(pic, textFileName.c_str() );
+
+		vector <int> playlist;
+		orderQR(qrCodes, playlist); //this orders the qr codes
+		for (int i=0; i<(playlist).size(); i++) //this plays the song correspoding to each qr code
+		{
+			song *thisSong = new song; //this dynamically allocates each song for each qr code
+			thisSong->setType( playlist[i] );
+			//thisSong->playSong(robot);
+			thisSong->trial();
+		}
+
+		for (int i=0; i<h; i++)
+			delete [] visitedMap[i];
+		delete [] visitedMap;
+
+		cout << "Do you want to play another playlist?  Enter the number (+press enter) of your choice." << endl;
+		cout << "	1. Yes" << endl;
+		cout << "	2. No" << endl;
+		cin >> repeat;
+	}
+
+	cout << "Thanks for using my program, and have a good day!" << endl;
+	return 0;
+}
