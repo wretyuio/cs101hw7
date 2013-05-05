@@ -1,0 +1,60 @@
+#ifndef QRCODE_H
+#define QRCODE_H
+#include <vector>
+#include <string>
+using namespace std;
+
+class qrcode
+{
+public:
+    // Constructor: inputs the taken picture from the mars.
+    // resets the private members to appropriate values !
+    qrcode(PicturePtr pic,string playlist);
+    int min(int min, int point);
+    int max(int max, int point);
+
+    int getXMin();
+    int getXMax();
+    int getYMin();
+    int getYMax();
+    int getType();
+    int setType(int number);
+    int getHeight();
+    int getWidth();
+    int getArea();
+    int playlistArea();
+    
+    bool Detect(int** visitedMap); //detects qr code, saves information in private members of class
+private:
+    void DetectHelper(int x, int y, int** visitedMap);
+    bool isBlack(int x, int y);
+    bool findFirst(int x, int y);
+    bool findNext(int x, int y);
+    bool blackWhite(int x, int y);
+    void findColor(int x, int y, int** visitedMap);
+    void triCross(int x, int y, int** visitedMap);
+
+    PicturePtr mainPic;
+    string playlistName;
+    int picWidth;
+    int picHeight;
+    int xmin;
+    int **visitedMap;
+    int ymin;
+    int xmax;
+    int ymax;
+    int type;
+      // 1: heart      yellow,  red background
+    	// 2: circle     purple,  green background
+    	// 3: star       orange,  blue background
+    	// 4: triangle   blue,    yellow background
+    	// 5: pentagon   red,     purple background
+    	// 6: cross      green,   orange background
+    //int colorScheme;
+        // 1: red    orange      ( temp.R > max(temp.G,temp.B) )
+        // 2: 
+        // 3: green              ( temp.G > max(temp.R,temp.B) )
+    bool isYellow;
+};
+
+#endif
