@@ -1,0 +1,26 @@
+#ifndef SONG_H
+#define SONG_H
+#include <vector>
+#include <string>
+#include <Myro.h>
+using namespace std;
+
+class song
+{
+public:
+    song ();
+	~song ();
+	void playSong(Scribbler &robot);
+	void setType(int number);
+	void trial();
+	int type;
+private:
+	string song1;
+	string song2;
+	string song3;
+	string song4;
+	string song5;
+	string song6;
+};
+
+#endif
